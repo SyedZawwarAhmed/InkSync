@@ -1,14 +1,19 @@
-import React, { useRef, useState } from "react";
+import { FC, useRef, useState } from "react";
 import { Stage, Layer, Line } from "react-konva";
 
 // Define the shape of a single line
-interface LineType {
+type LineType = {
   tool: string;
   points: number[];
-}
+};
 
-export const Canvas: React.FC = () => {
-  const [tool, setTool] = useState<"pen" | "eraser">("pen");
+type PropTypes = {
+  tool: "pen" | "eraser";
+  strokeColor: string;
+  strokeWidth: number;
+};
+
+export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const [lines, setLines] = useState<LineType[]>([]);
   const isDrawing = useRef(false);
 
@@ -53,8 +58,8 @@ export const Canvas: React.FC = () => {
             <Line
               key={i}
               points={line.points}
-              stroke="#ffffff"
-              strokeWidth={5}
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
               tension={0.5}
               lineCap="round"
               lineJoin="round"
@@ -65,13 +70,6 @@ export const Canvas: React.FC = () => {
           ))}
         </Layer>
       </Stage>
-      <select
-        value={tool}
-        onChange={(e) => setTool(e.target.value as "pen" | "eraser")} // Type casting for select options
-      >
-        <option value="pen">Pen</option>
-        <option value="eraser">Eraser</option>
-      </select>
     </div>
   );
 };

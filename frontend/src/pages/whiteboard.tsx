@@ -13,6 +13,7 @@ import { Canvas } from "@/components/logic/canvas";
 export default function ModernWhiteboard() {
   const [activeColor, setActiveColor] = useState("#ffffff");
   const [strokeWidth, setStrokeWidth] = useState(5);
+  const [tool, setTool] = useState<"pen" | "eraser">("pen");
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -28,7 +29,11 @@ export default function ModernWhiteboard() {
       </header>
       <div className="flex-1 relative overflow-hidden z-10">
         <div className="flex-1 bg-gray-800" id="canvas">
-          <Canvas />
+          <Canvas
+            tool={tool}
+            strokeColor={activeColor}
+            strokeWidth={strokeWidth}
+          />
         </div>
         <div className="absolute bottom-4 left-4 bg-gray-800 rounded-full p-2 shadow-lg">
           <div className="flex flex-col items-center space-y-2">
@@ -58,14 +63,20 @@ export default function ModernWhiteboard() {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-gray-700 transition-colors duration-200"
+              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
+                tool === "pen" && "bg-gray-700"
+              }`}
+              onClick={() => setTool("pen")}
             >
               <Pen className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-gray-700 transition-colors duration-200"
+              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
+                tool === "eraser" && "bg-gray-700"
+              }`}
+              onClick={() => setTool("eraser")}
             >
               <Eraser className="h-5 w-5" />
             </Button>
