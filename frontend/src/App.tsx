@@ -1,5 +1,7 @@
-function App() {
-  return <h1>Hello Neo-Tree!</h1>;
-}
+import Whiteboard from "./pages/whiteboard";
+
+const App = () => {
+  return <Whiteboard />;
+};
 
 export default App;
