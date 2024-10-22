@@ -1,12 +1,9 @@
 import { useSocket } from "@/hooks/useSocket";
-import { FC, useRef, useState } from "react";
+import { useLinesStore } from "@/store/lines";
+import { FC, useRef } from "react";
 import { Stage, Layer, Line } from "react-konva";
 
 // Define the shape of a single line
-type LineType = {
-  tool: string;
-  points: number[];
-};
 
 type PropTypes = {
   tool: "pen" | "eraser";
@@ -16,7 +13,8 @@ type PropTypes = {
 
 export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const { draw } = useSocket();
-  const [lines, setLines] = useState<LineType[]>([]);
+  const lines = useLinesStore((state) => state.lines);
+  const setLines = useLinesStore((state) => state.setLines);
   const isDrawing = useRef(false);
 
   const handleMouseDown = (e): void => {
@@ -29,7 +27,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDrawing.current) return; // Skip if not drawing
+    if (!isDrawing.current) return;
 
     const stage = e.target.getStage();
     const point = stage?.getPointerPosition();
@@ -39,7 +37,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     lastLine.points = lastLine.points.concat([point.x, point.y]);
 
     const newLines = lines.slice(0, lines.length - 1).concat(lastLine);
-    setLines(newLines); // Update the line with new points
+    setLines(newLines);
     draw(newLines);
   };
 

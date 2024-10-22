@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import http from "http";
 
+const lines = [];
+
 export class SocketService {
   private io: Server;
 
@@ -22,7 +24,8 @@ export class SocketService {
       socket.on("draw", (data) => {
         console.log("Message received:", data);
 
-        socket.emit("server_draw", data);
+        lines.push(data);
+        socket.broadcast.emit("draw", data);
       });
 
       socket.on("disconnect", () => {

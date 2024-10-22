@@ -23,7 +23,8 @@
     "react-konva": "^18.2.10",
     "socket.io-client": "^4.8.0",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
