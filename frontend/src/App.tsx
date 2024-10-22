@@ -1,7 +1,12 @@
-import Whiteboard from "./pages/whiteboard";
+import { SocketProvider } from "./context/SocketProvider";
+import Whiteboard from "./modules/whiteboard";
 
 const App = () => {
-  return <Whiteboard />;
+  return (
+    <SocketProvider>
+      <Whiteboard />
+    </SocketProvider>
+  );
 };
 
 export default App;

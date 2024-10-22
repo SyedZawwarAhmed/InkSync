@@ -1,3 +1,4 @@
+import { useSocket } from "@/hooks/useSocket";
 import { FC, useRef, useState } from "react";
 import { Stage, Layer, Line } from "react-konva";
 
@@ -14,6 +15,7 @@ type PropTypes = {
 };
 
 export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
+  const { draw } = useSocket();
   const [lines, setLines] = useState<LineType[]>([]);
   const isDrawing = useRef(false);
 
@@ -38,6 +40,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
 
     const newLines = lines.slice(0, lines.length - 1).concat(lastLine);
     setLines(newLines); // Update the line with new points
+    draw(newLines);
   };
 
   const handleMouseUp = () => {
