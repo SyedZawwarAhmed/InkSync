@@ -1,5 +1,6 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useLinesStore } from "@/store/lines";
+import { KonvaEventObject } from "konva/lib/Node";
 import { FC, useRef } from "react";
 import { Stage, Layer, Line } from "react-konva";
 
@@ -17,7 +18,8 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const setLines = useLinesStore((state) => state.setLines);
   const isDrawing = useRef(false);
 
-  const handleMouseDown = (e): void => {
+  // disable-eslint-next-line @typescript-eslint
+  const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
     isDrawing.current = true;
 
     const pos = e.target.getStage()?.getPointerPosition();
@@ -29,7 +31,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     }
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
     if (!isDrawing.current) return;
 
     const stage = e.target.getStage();
