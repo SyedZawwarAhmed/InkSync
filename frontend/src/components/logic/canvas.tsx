@@ -1,24 +1,8 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useLinesStore } from "@/store/lines";
+import { KonvaEventObject } from "konva/lib/Node";
 import { FC, useRef, useState } from "react";
 import { Stage, Layer, Line, Rect } from "react-konva";
-
-type LineType = {
-  tool: "pen" | "eraser";
-  points: number[];
-  strokeColor: string;
-  strokeWidth: number;
-};
-
-type RectType = {
-  tool: "rectangle";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  strokeColor: string;
-  strokeWidth: number;
-};
 
 type PropTypes = {
   tool: "pen" | "eraser" | "rectangle";
@@ -39,7 +23,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     null
   );
 
-  const handleMouseDown = (e: any): void => {
+  const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
     isDrawing.current = true;
     const pos = e.target.getStage()?.getPointerPosition();
     if (!pos) return;
@@ -63,7 +47,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     }
   };
 
-  const handleMouseMove = (e: any) => {
+  const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
     if (!isDrawing.current) return;
 
     const stage = e.target.getStage();
