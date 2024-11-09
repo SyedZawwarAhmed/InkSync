@@ -18,7 +18,7 @@ export default function Whiteboard() {
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <header className="flex items-center justify-between px-6 py-4 bg-gray-800">
-        <h1 className="text-2xl font-bold">{tool}</h1>
+        <h1 className="text-2xl font-bold">InkSync</h1>
         <Button
           variant="ghost"
           className="hover:bg-gray-700 transition-colors duration-200"
