@@ -22,7 +22,10 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
 
     const pos = e.target.getStage()?.getPointerPosition();
     if (pos) {
-      setLines([...lines, { tool, points: [pos.x, pos.y] }]);
+      setLines([
+        ...lines,
+        { tool, points: [pos.x, pos.y], strokeColor, strokeWidth },
+      ]);
     }
   };
 
@@ -59,8 +62,8 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
             <Line
               key={i}
               points={line.points}
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
+              stroke={line.strokeColor}
+              strokeWidth={line.strokeWidth}
               tension={0.5}
               lineCap="round"
               lineJoin="round"

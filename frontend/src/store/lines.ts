@@ -3,6 +3,8 @@ import { create } from "zustand";
 type LineType = {
   tool: string;
   points: number[];
+  strokeColor: string;
+  strokeWidth: number;
 };
 
 type Store = {
@@ -11,6 +13,6 @@ type Store = {
 };
 
 export const useLinesStore = create<Store>()((set) => ({
-  lines: [],
+  lines: [{ strokeColor: "#ffffff", strokeWidth: 5, tool: "pen", points: [] }],
   setLines: (lines: LineType[]) => set({ lines: lines }),
 }));
