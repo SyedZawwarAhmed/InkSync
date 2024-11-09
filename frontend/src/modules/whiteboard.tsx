@@ -10,15 +10,15 @@ import {
 import { Pen, Eraser, Square, Circle, Type, Share2 } from "lucide-react";
 import { Canvas } from "@/components/logic/canvas";
 
-export default function ModernWhiteboard() {
+export default function Whiteboard() {
   const [activeColor, setActiveColor] = useState("#ffffff");
   const [strokeWidth, setStrokeWidth] = useState(5);
-  const [tool, setTool] = useState<"pen" | "eraser">("pen");
+  const [tool, setTool] = useState<"pen" | "rectangle" | "eraser">("pen");
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <header className="flex items-center justify-between px-6 py-4 bg-gray-800">
-        <h1 className="text-2xl font-bold">InkSync</h1>
+        <h1 className="text-2xl font-bold">{tool}</h1>
         <Button
           variant="ghost"
           className="hover:bg-gray-700 transition-colors duration-200"
@@ -91,7 +91,10 @@ export default function ModernWhiteboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-gray-800 border-gray-700">
-                <DropdownMenuItem className="hover:bg-gray-700">
+                <DropdownMenuItem
+                  className="hover:bg-gray-700"
+                  onClick={() => setTool("rectangle")}
+                >
                   <Square className="h-4 w-4 mr-2" />
                   Square
                 </DropdownMenuItem>

@@ -1,18 +1,15 @@
 import { create } from "zustand";
 
-type LineType = {
-  tool: string;
-  points: number[];
-  strokeColor: string;
-  strokeWidth: number;
-};
-
 type Store = {
   lines: LineType[];
+  rectangles: RectType[];
   setLines: (lines: LineType[]) => void;
+  setRectangles: (rectangles: RectType[]) => void;
 };
 
-export const useLinesStore = create<Store>()((set) => ({
+export const useLinesStore = create<Store>((set) => ({
   lines: [{ strokeColor: "#ffffff", strokeWidth: 5, tool: "pen", points: [] }],
-  setLines: (lines: LineType[]) => set({ lines: lines }),
+  rectangles: [],
+  setLines: (lines: LineType[]) => set({ lines }),
+  setRectangles: (rectangles: RectType[]) => set({ rectangles }),
 }));

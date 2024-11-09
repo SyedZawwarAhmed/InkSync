@@ -4,7 +4,7 @@ import React, { createContext, useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface SocketContextType {
-  draw: (data: any) => void;
+  draw: (data: LineType[] | RectType[]) => void;
 }
 
 export const SocketContext = createContext<SocketContextType | undefined>(
@@ -25,7 +25,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("Socket connected:", socket.current?.id);
     });
 
-    socket.current.on("draw", (data: any) => {
+    socket.current.on("draw", (data: LineType[]) => {
       console.log("Drawing:", data);
       setLines(data);
     });
@@ -37,10 +37,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       socket.current?.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const draw = useCallback(
-    (data: any) => {
+    (data: LineType[] | RectType[]) => {
       if (socket.current) {
         socket.current.emit("draw", data);
       }
