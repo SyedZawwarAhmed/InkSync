@@ -1,8 +1,9 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useLinesStore } from "@/store/lines";
 import { KonvaEventObject } from "konva/lib/Node";
-import { FC, useRef, useState } from "react";
+import { FC, useRef, useState, useEffect } from "react";
 import { Stage, Layer, Line, Rect, Ellipse } from "react-konva";
+import { Vector2d } from "konva/lib/types";
 
 type PropTypes = {
   tool: ToolType;
@@ -27,8 +28,35 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const [temporaryEllipse, setTemporaryEllipse] = useState<EllipseType | null>(
     null
   );
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
 
-  const getRelativePointerPosition = (e: KonvaEventObject<MouseEvent>) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !isSpacePressed) {
+        e.preventDefault();
+        setIsSpacePressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsSpacePressed(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [isSpacePressed]);
+
+  const getRelativePointerPosition = (
+    e: KonvaEventObject<MouseEvent>
+  ): Vector2d | undefined => {
     const stage = e.target.getStage();
     if (stage) {
       const transform = stage.getAbsoluteTransform().copy();
@@ -39,6 +67,8 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
+    if (isSpacePressed) return; // Don't draw if space is pressed
+
     isDrawing.current = true;
     const pos = getRelativePointerPosition(e);
     if (!pos) return;
@@ -74,6 +104,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    if (isSpacePressed) return; // Don't draw if space is pressed
     if (!isDrawing.current) return;
 
     const point = getRelativePointerPosition(e);
@@ -173,9 +204,22 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         scaleY={stage.scale}
         x={stage.x}
         y={stage.y}
-        draggable={tool === "hand"}
-        onDragEnd={() => {
-          setStage({ ...stage, x: 0, y: 0 });
+        draggable={isSpacePressed || tool === "hand"}
+        onDragEnd={(e) => {
+          const newPos = e.target.position();
+          setStage({
+            ...stage,
+            x: newPos.x,
+            y: newPos.y,
+          });
+        }}
+        style={{
+          cursor:
+            isSpacePressed || tool === "hand"
+              ? isDrawing.current
+                ? "grabbing"
+                : "grab"
+              : "crosshair",
         }}
       >
         <Layer>
