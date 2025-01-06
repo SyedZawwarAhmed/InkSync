@@ -14,3 +14,13 @@ type RectType = {
   strokeColor: string;
   strokeWidth: number;
 };
+
+type EllipseType = {
+  tool: "ellipse";
+  x: number;
+  y: number;
+  radiusX: number;
+  radiusY: number;
+  strokeColor: string;
+  strokeWidth: number;
+};

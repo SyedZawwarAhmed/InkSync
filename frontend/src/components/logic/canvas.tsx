@@ -2,10 +2,10 @@ import { useSocket } from "@/hooks/useSocket";
 import { useLinesStore } from "@/store/lines";
 import { KonvaEventObject } from "konva/lib/Node";
 import { FC, useRef, useState } from "react";
-import { Stage, Layer, Line, Rect } from "react-konva";
+import { Stage, Layer, Line, Rect, Ellipse } from "react-konva";
 
 type PropTypes = {
-  tool: "pen" | "eraser" | "rectangle";
+  tool: ToolType;
   strokeColor: string;
   strokeWidth: number;
 };
@@ -16,10 +16,15 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const setLines = useLinesStore((state) => state.setLines);
   const rectangles = useLinesStore((state) => state.rectangles);
   const setRectangles = useLinesStore((state) => state.setRectangles);
+  const ellipses = useLinesStore((state) => state.ellipses);
+  const setEllipse = useLinesStore((state) => state.setEllipse);
 
   const isDrawing = useRef(false);
   const startPoint = useRef<{ x: number; y: number } | null>(null);
   const [temporaryRectangle, setTemporaryRectangle] = useState<RectType | null>(
+    null
+  );
+  const [temporaryEllipse, setTemporaryEllipse] = useState<EllipseType | null>(
     null
   );
 
@@ -41,6 +46,17 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         y: pos.y,
         width: 0,
         height: 0,
+        strokeColor,
+        strokeWidth,
+      });
+    } else if (tool === "ellipse") {
+      startPoint.current = pos;
+      setTemporaryEllipse({
+        tool: "ellipse",
+        x: pos.x,
+        y: pos.y,
+        radiusX: 0,
+        radiusY: 0,
         strokeColor,
         strokeWidth,
       });
@@ -74,6 +90,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         strokeColor,
         strokeWidth,
       });
+    } else if (tool === "ellipse" && startPoint.current) {
+      const { x, y } = startPoint.current;
+
+      setTemporaryEllipse({
+        tool: "ellipse",
+        x,
+        y,
+        radiusX: (point.x - x) / 2,
+        radiusY: (point.y - y) / 2,
+        strokeColor,
+        strokeWidth,
+      });
     }
   };
 
@@ -83,9 +111,44 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     if (tool === "rectangle" && temporaryRectangle) {
       setRectangles([...rectangles, temporaryRectangle]);
       setTemporaryRectangle(null);
+    } else if (tool === "ellipse" && temporaryEllipse) {
+      setEllipse([...ellipses, temporaryEllipse]);
+      setTemporaryEllipse(null);
     }
 
     startPoint.current = null;
+  };
+
+  const [stage, setStage] = useState({
+    scale: 1,
+    x: 0,
+    y: 0,
+  });
+
+  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+
+    const scaleBy = 1.02;
+    const stage = e.target.getStage();
+    if (stage) {
+      const oldScale = stage.scaleX();
+      const stagePointerPosition = stage.getPointerPosition();
+      if (stagePointerPosition) {
+        const mousePointTo = {
+          x: stagePointerPosition.x / oldScale - stage.x() / oldScale,
+          y: stagePointerPosition.y / oldScale - stage.y() / oldScale,
+        };
+
+        const newScale =
+          e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+        setStage({
+          scale: newScale,
+          x: (stagePointerPosition.x / newScale - mousePointTo.x) * newScale,
+          y: (stagePointerPosition.y / newScale - mousePointTo.y) * newScale,
+        });
+      }
+    }
   };
 
   return (
@@ -96,6 +159,15 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onWheel={handleWheel}
+        scaleX={stage.scale}
+        scaleY={stage.scale}
+        x={stage.x}
+        y={stage.y}
+        draggable={tool === "hand"}
+        onDragEnd={() => {
+          setStage({ ...stage, x: 0, y: 0 });
+        }}
       >
         <Layer>
           {lines.map((line, i) => (
@@ -132,6 +204,27 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
               stroke={temporaryRectangle.strokeColor}
               strokeWidth={temporaryRectangle.strokeWidth}
               globalCompositeOperation="source-over"
+            />
+          )}
+          {ellipses.map((ellipse, i) => (
+            <Ellipse
+              key={i}
+              x={ellipse.x}
+              y={ellipse.y}
+              radiusX={ellipse.radiusX}
+              radiusY={ellipse.radiusY}
+              stroke={ellipse.strokeColor}
+              strokeWidth={ellipse.strokeWidth}
+            />
+          ))}
+          {temporaryEllipse && (
+            <Ellipse
+              x={temporaryEllipse.x}
+              y={temporaryEllipse.y}
+              radiusX={temporaryEllipse.radiusX}
+              radiusY={temporaryEllipse.radiusY}
+              stroke={temporaryEllipse.strokeColor}
+              strokeWidth={temporaryEllipse.strokeWidth}
             />
           )}
         </Layer>
