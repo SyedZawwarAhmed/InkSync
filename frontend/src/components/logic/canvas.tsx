@@ -28,9 +28,19 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     null
   );
 
+  const getRelativePointerPosition = (e: KonvaEventObject<MouseEvent>) => {
+    const stage = e.target.getStage();
+    if (stage) {
+      const transform = stage.getAbsoluteTransform().copy();
+      transform.invert();
+      const pos = stage.getPointerPosition();
+      if (pos) return transform.point(pos);
+    }
+  };
+
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
     isDrawing.current = true;
-    const pos = e.target.getStage()?.getPointerPosition();
+    const pos = getRelativePointerPosition(e);
     if (!pos) return;
 
     if (tool === "pen" || tool === "eraser") {
@@ -66,8 +76,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
     if (!isDrawing.current) return;
 
-    const stage = e.target.getStage();
-    const point = stage?.getPointerPosition();
+    const point = getRelativePointerPosition(e);
     if (!point) return;
 
     if (tool === "pen" || tool === "eraser") {
