@@ -1,7 +1,8 @@
 import { useSocket } from "@/hooks/useSocket";
+import { useHistoryStore } from "@/store/history";
 import { useLinesStore } from "@/store/lines";
 import { KonvaEventObject } from "konva/lib/Node";
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { Stage, Layer, Line, Rect } from "react-konva";
 
 type PropTypes = {
@@ -12,7 +13,16 @@ type PropTypes = {
 
 export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const { draw } = useSocket();
+
+  const { history, setHistory, currentState, undoState, redoState } =
+    useHistoryStore();
+  console.log(
+    "\n\n ---> src/components/logic/canvas.tsx:18 -> history: ",
+    history
+  );
   const lines = useLinesStore((state) => state.lines);
+  const shouldCreateNewSateRef = useRef(false);
+  console.log("\n\n ---> src/components/logic/canvas.tsx:20 -> lines: ", lines);
   const setLines = useLinesStore((state) => state.setLines);
   const rectangles = useLinesStore((state) => state.rectangles);
   const setRectangles = useLinesStore((state) => state.setRectangles);
@@ -22,6 +32,23 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const [temporaryRectangle, setTemporaryRectangle] = useState<RectType | null>(
     null
   );
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key.toLowerCase() === "z") {
+        if (event.shiftKey) {
+          redoState();
+        } else {
+          undoState();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
     isDrawing.current = true;
@@ -54,10 +81,11 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     const point = stage?.getPointerPosition();
     if (!point) return;
 
+    let newLines: LineType[] = [];
     if (tool === "pen" || tool === "eraser") {
       const lastLine = lines[lines.length - 1];
       lastLine.points = lastLine.points.concat([point.x, point.y]);
-      const newLines = lines.slice(0, lines.length - 1).concat(lastLine);
+      newLines = lines.slice(0, lines.length - 1).concat(lastLine);
       setLines(newLines);
       draw(newLines);
     } else if (tool === "rectangle" && startPoint.current) {
@@ -75,6 +103,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         strokeWidth,
       });
     }
+    if (shouldCreateNewSateRef.current) {
+      shouldCreateNewSateRef.current = false;
+      const newState = [...history, { lines: newLines, rectangles: [] }];
+      setHistory(newState);
+    } else {
+      const newState = [...history];
+      newState[currentState] = {
+        lines: newLines,
+        rectangles: [],
+      };
+      setHistory(newState);
+    }
   };
 
   const handleMouseUp = () => {
@@ -84,10 +124,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       setRectangles([...rectangles, temporaryRectangle]);
       setTemporaryRectangle(null);
     }
-
+    shouldCreateNewSateRef.current = true;
     startPoint.current = null;
   };
 
+  console.log(
+    "\n\n ---> src/components/logic/canvas.tsx:116 -> history[currentState]?.lines: ",
+    history[currentState]?.lines
+  );
+  console.log(
+    "\n\n ---> src/components/logic/canvas.tsx:120 -> currentState: ",
+    currentState
+  );
   return (
     <div>
       <Stage
@@ -98,7 +146,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         onMouseUp={handleMouseUp}
       >
         <Layer>
-          {lines.map((line, i) => (
+          {history[currentState]?.lines.map((line, i) => (
             <Line
               key={i}
               points={line.points}
@@ -110,10 +158,12 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
               globalCompositeOperation={
                 line.tool === "eraser" ? "destination-out" : "source-over"
               }
+              // draggable
             />
           ))}
-          {rectangles.map((rect, i) => (
+          {history[currentState]?.rectangles.map((rect, i) => (
             <Rect
+              // draggable
               key={i}
               x={rect.x}
               y={rect.y}
@@ -125,6 +175,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
           ))}
           {temporaryRectangle && (
             <Rect
+              // draggable
               x={temporaryRectangle.x}
               y={temporaryRectangle.y}
               width={temporaryRectangle.width}
