@@ -1,11 +1,12 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useLinesStore } from "@/store/lines";
 import { KonvaEventObject } from "konva/lib/Node";
-import { FC, useRef, useState } from "react";
-import { Stage, Layer, Line, Rect } from "react-konva";
+import { FC, useRef, useState, useEffect } from "react";
+import { Stage, Layer, Line, Rect, Ellipse } from "react-konva";
+import { Vector2d } from "konva/lib/types";
 
 type PropTypes = {
-  tool: "pen" | "eraser" | "rectangle";
+  tool: ToolType;
   strokeColor: string;
   strokeWidth: number;
 };
@@ -16,16 +17,60 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const setLines = useLinesStore((state) => state.setLines);
   const rectangles = useLinesStore((state) => state.rectangles);
   const setRectangles = useLinesStore((state) => state.setRectangles);
+  const ellipses = useLinesStore((state) => state.ellipses);
+  const setEllipse = useLinesStore((state) => state.setEllipse);
 
   const isDrawing = useRef(false);
   const startPoint = useRef<{ x: number; y: number } | null>(null);
   const [temporaryRectangle, setTemporaryRectangle] = useState<RectType | null>(
     null
   );
+  const [temporaryEllipse, setTemporaryEllipse] = useState<EllipseType | null>(
+    null
+  );
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !isSpacePressed) {
+        e.preventDefault();
+        setIsSpacePressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsSpacePressed(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [isSpacePressed]);
+
+  const getRelativePointerPosition = (
+    e: KonvaEventObject<MouseEvent>
+  ): Vector2d | undefined => {
+    const stage = e.target.getStage();
+    if (stage) {
+      const transform = stage.getAbsoluteTransform().copy();
+      transform.invert();
+      const pos = stage.getPointerPosition();
+      if (pos) return transform.point(pos);
+    }
+  };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
+    if (isSpacePressed) return; // Don't draw if space is pressed
+
     isDrawing.current = true;
-    const pos = e.target.getStage()?.getPointerPosition();
+    const pos = getRelativePointerPosition(e);
     if (!pos) return;
 
     if (tool === "pen" || tool === "eraser") {
@@ -44,14 +89,25 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         strokeColor,
         strokeWidth,
       });
+    } else if (tool === "ellipse") {
+      startPoint.current = pos;
+      setTemporaryEllipse({
+        tool: "ellipse",
+        x: pos.x,
+        y: pos.y,
+        radiusX: 0,
+        radiusY: 0,
+        strokeColor,
+        strokeWidth,
+      });
     }
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    if (isSpacePressed) return; // Don't draw if space is pressed
     if (!isDrawing.current) return;
 
-    const stage = e.target.getStage();
-    const point = stage?.getPointerPosition();
+    const point = getRelativePointerPosition(e);
     if (!point) return;
 
     if (tool === "pen" || tool === "eraser") {
@@ -74,6 +130,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         strokeColor,
         strokeWidth,
       });
+    } else if (tool === "ellipse" && startPoint.current) {
+      const { x, y } = startPoint.current;
+
+      setTemporaryEllipse({
+        tool: "ellipse",
+        x,
+        y,
+        radiusX: (point.x - x) / 2,
+        radiusY: (point.y - y) / 2,
+        strokeColor,
+        strokeWidth,
+      });
     }
   };
 
@@ -83,9 +151,44 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     if (tool === "rectangle" && temporaryRectangle) {
       setRectangles([...rectangles, temporaryRectangle]);
       setTemporaryRectangle(null);
+    } else if (tool === "ellipse" && temporaryEllipse) {
+      setEllipse([...ellipses, temporaryEllipse]);
+      setTemporaryEllipse(null);
     }
 
     startPoint.current = null;
+  };
+
+  const [stage, setStage] = useState({
+    scale: 1,
+    x: 0,
+    y: 0,
+  });
+
+  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+
+    const scaleBy = 1.02;
+    const stage = e.target.getStage();
+    if (stage) {
+      const oldScale = stage.scaleX();
+      const stagePointerPosition = stage.getPointerPosition();
+      if (stagePointerPosition) {
+        const mousePointTo = {
+          x: stagePointerPosition.x / oldScale - stage.x() / oldScale,
+          y: stagePointerPosition.y / oldScale - stage.y() / oldScale,
+        };
+
+        const newScale =
+          e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+        setStage({
+          scale: newScale,
+          x: (stagePointerPosition.x / newScale - mousePointTo.x) * newScale,
+          y: (stagePointerPosition.y / newScale - mousePointTo.y) * newScale,
+        });
+      }
+    }
   };
 
   return (
@@ -96,6 +199,28 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onWheel={handleWheel}
+        scaleX={stage.scale}
+        scaleY={stage.scale}
+        x={stage.x}
+        y={stage.y}
+        draggable={isSpacePressed || tool === "hand"}
+        onDragEnd={(e) => {
+          const newPos = e.target.position();
+          setStage({
+            ...stage,
+            x: newPos.x,
+            y: newPos.y,
+          });
+        }}
+        style={{
+          cursor:
+            isSpacePressed || tool === "hand"
+              ? isDrawing.current
+                ? "grabbing"
+                : "grab"
+              : "crosshair",
+        }}
       >
         <Layer>
           {lines.map((line, i) => (
@@ -132,6 +257,27 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
               stroke={temporaryRectangle.strokeColor}
               strokeWidth={temporaryRectangle.strokeWidth}
               globalCompositeOperation="source-over"
+            />
+          )}
+          {ellipses.map((ellipse, i) => (
+            <Ellipse
+              key={i}
+              x={ellipse.x}
+              y={ellipse.y}
+              radiusX={ellipse.radiusX}
+              radiusY={ellipse.radiusY}
+              stroke={ellipse.strokeColor}
+              strokeWidth={ellipse.strokeWidth}
+            />
+          ))}
+          {temporaryEllipse && (
+            <Ellipse
+              x={temporaryEllipse.x}
+              y={temporaryEllipse.y}
+              radiusX={temporaryEllipse.radiusX}
+              radiusY={temporaryEllipse.radiusY}
+              stroke={temporaryEllipse.strokeColor}
+              strokeWidth={temporaryEllipse.strokeWidth}
             />
           )}
         </Layer>

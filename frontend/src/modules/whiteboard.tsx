@@ -1,19 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Pen, Eraser, Square, Circle, Type, Share2 } from "lucide-react";
+import { Pen, Eraser, Square, Circle, Type, Share2, Hand } from "lucide-react";
 import { Canvas } from "@/components/logic/canvas";
 
 export default function Whiteboard() {
   const [activeColor, setActiveColor] = useState("#ffffff");
   const [strokeWidth, setStrokeWidth] = useState(5);
-  const [tool, setTool] = useState<"pen" | "rectangle" | "eraser">("pen");
+  const [tool, setTool] = useState<ToolType>("pen");
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -64,6 +58,16 @@ export default function Whiteboard() {
               variant="ghost"
               size="icon"
               className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
+                tool === "hand" && "bg-gray-700"
+              }`}
+              onClick={() => setTool("hand")}
+            >
+              <Hand className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
                 tool === "pen" && "bg-gray-700"
               }`}
               onClick={() => setTool("pen")}
@@ -80,34 +84,33 @@ export default function Whiteboard() {
             >
               <Eraser className="h-5 w-5" />
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full hover:bg-gray-700 transition-colors duration-200"
-                >
-                  <Square className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-gray-800 border-gray-700">
-                <DropdownMenuItem
-                  className="hover:bg-gray-700"
-                  onClick={() => setTool("rectangle")}
-                >
-                  <Square className="h-4 w-4 mr-2" />
-                  Square
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-700">
-                  <Circle className="h-4 w-4 mr-2" />
-                  Circle
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-gray-700 transition-colors duration-200"
+              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
+                tool === "rectangle" && "bg-gray-700"
+              }`}
+              onClick={() => setTool("rectangle")}
+            >
+              <Square className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
+                tool === "ellipse" && "bg-gray-700"
+              }`}
+              onClick={() => setTool("ellipse")}
+            >
+              <Circle className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
+                tool === "text" && "bg-gray-700"
+              }`}
+              onClick={() => setTool("text")}
             >
               <Type className="h-5 w-5" />
             </Button>
