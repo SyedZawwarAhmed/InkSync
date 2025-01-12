@@ -67,6 +67,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
+    e.evt.preventDefault();
     if (isSpacePressed) return; // Don't draw if space is pressed
 
     isDrawing.current = true;
@@ -104,6 +105,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    e.evt.preventDefault();
     if (isSpacePressed) return; // Don't draw if space is pressed
     if (!isDrawing.current) return;
 
