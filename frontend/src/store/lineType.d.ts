@@ -6,6 +6,7 @@ type LineType = {
 };
 
 type RectType = {
+  id: string;
   tool: "rectangle";
   x: number;
   y: number;

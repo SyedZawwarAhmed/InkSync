@@ -4,6 +4,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { FC, useRef, useState, useEffect } from "react";
 import { Stage, Layer, Line, Rect, Ellipse } from "react-konva";
 import { Vector2d } from "konva/lib/types";
+import { Rectangle } from "./rectangle";
 
 type PropTypes = {
   tool: ToolType;
@@ -11,17 +12,24 @@ type PropTypes = {
   strokeWidth: number;
 };
 
+let shapeId = 0;
+
 export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const { draw } = useSocket();
   const lines = useLinesStore((state) => state.lines);
   const setLines = useLinesStore((state) => state.setLines);
   const rectangles = useLinesStore((state) => state.rectangles);
+  console.log(
+    "\n\n ---> src/components/logic/canvas.tsx:21 -> rectangles: ",
+    rectangles
+  );
   const setRectangles = useLinesStore((state) => state.setRectangles);
   const ellipses = useLinesStore((state) => state.ellipses);
   const setEllipse = useLinesStore((state) => state.setEllipse);
 
   const isDrawing = useRef(false);
   const startPoint = useRef<{ x: number; y: number } | null>(null);
+  const [selectedShapeId, setSelectedShapeId] = useState("");
   const [temporaryRectangle, setTemporaryRectangle] = useState<RectType | null>(
     null
   );
@@ -81,6 +89,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     } else if (tool === "rectangle") {
       startPoint.current = pos;
       setTemporaryRectangle({
+        id: `${shapeId++}`,
         tool: "rectangle",
         x: pos.x,
         y: pos.y,
@@ -122,6 +131,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       const height = point.y - y;
 
       setTemporaryRectangle({
+        id: `${shapeId}`,
         tool: "rectangle",
         x,
         y,
@@ -238,14 +248,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
             />
           ))}
           {rectangles.map((rect, i) => (
-            <Rect
+            <Rectangle
               key={i}
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              stroke={rect.strokeColor}
-              strokeWidth={rect.strokeWidth}
+              shapeProps={rect}
+              isSelected={rect.id === selectedShapeId}
+              onSelect={() => {
+                setSelectedShapeId(rect.id);
+              }}
+              onChange={(newAttrs) => {
+                const rects = rectangles.slice();
+                rects[i] = newAttrs;
+                setRectangles(rects);
+              }}
             />
           ))}
           {temporaryRectangle && (
