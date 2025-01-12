@@ -132,13 +132,19 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       });
     } else if (tool === "ellipse" && startPoint.current) {
       const { x, y } = startPoint.current;
+      const width = Math.abs(point.x - x);
+      const height = Math.abs(point.y - y);
+
+      // Calculate center point of the ellipse
+      const centerX = x + (point.x - x) / 2;
+      const centerY = y + (point.y - y) / 2;
 
       setTemporaryEllipse({
         tool: "ellipse",
-        x,
-        y,
-        radiusX: (point.x - x) / 2,
-        radiusY: (point.y - y) / 2,
+        x: centerX,
+        y: centerY,
+        radiusX: width / 2,
+        radiusY: height / 2,
         strokeColor,
         strokeWidth,
       });
