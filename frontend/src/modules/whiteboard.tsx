@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Pen, Eraser, Square, Circle, Type, Share2, Hand } from "lucide-react";
+import { Pen, Eraser, Square, Circle, Hand } from "lucide-react";
 import { Canvas } from "@/components/logic/canvas";
 
 export default function Whiteboard() {
@@ -13,13 +13,13 @@ export default function Whiteboard() {
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <header className="flex items-center justify-between px-6 py-4 bg-gray-800">
         <h1 className="text-2xl font-bold">InkSync</h1>
-        <Button
-          variant="ghost"
-          className="hover:bg-gray-700 transition-colors duration-200"
-        >
-          <Share2 className="h-5 w-5 mr-2" />
-          Share
-        </Button>
+        {/* <Button */}
+        {/*   variant="ghost" */}
+        {/*   className="hover:bg-gray-700 transition-colors duration-200" */}
+        {/* > */}
+        {/*   <Share2 className="h-5 w-5 mr-2" /> */}
+        {/*   Share */}
+        {/* </Button> */}
       </header>
       <div className="flex-1 relative overflow-hidden z-10">
         <div className="flex-1 bg-gray-800" id="canvas">
@@ -104,16 +104,16 @@ export default function Whiteboard() {
             >
               <Circle className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${
-                tool === "text" && "bg-gray-700"
-              }`}
-              onClick={() => setTool("text")}
-            >
-              <Type className="h-5 w-5" />
-            </Button>
+            {/* <Button */}
+            {/*   variant="ghost" */}
+            {/*   size="icon" */}
+            {/*   className={`rounded-full hover:bg-gray-700 transition-colors duration-200 ${ */}
+            {/*     tool === "text" && "bg-gray-700" */}
+            {/*   }`} */}
+            {/*   onClick={() => setTool("text")} */}
+            {/* > */}
+            {/*   <Type className="h-5 w-5" /> */}
+            {/* </Button> */}
           </div>
         </div>
       </div>

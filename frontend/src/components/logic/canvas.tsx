@@ -75,6 +75,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
+    e.evt.preventDefault();
     if (isSpacePressed) return; // Don't draw if space is pressed
 
     isDrawing.current = true;
@@ -113,6 +114,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    e.evt.preventDefault();
     if (isSpacePressed) return; // Don't draw if space is pressed
     if (!isDrawing.current) return;
 
@@ -142,13 +144,19 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       });
     } else if (tool === "ellipse" && startPoint.current) {
       const { x, y } = startPoint.current;
+      const width = Math.abs(point.x - x);
+      const height = Math.abs(point.y - y);
+
+      // Calculate center point of the ellipse
+      const centerX = x + (point.x - x) / 2;
+      const centerY = y + (point.y - y) / 2;
 
       setTemporaryEllipse({
         tool: "ellipse",
-        x,
-        y,
-        radiusX: (point.x - x) / 2,
-        radiusY: (point.y - y) / 2,
+        x: centerX,
+        y: centerY,
+        radiusX: width / 2,
+        radiusY: height / 2,
         strokeColor,
         strokeWidth,
       });
