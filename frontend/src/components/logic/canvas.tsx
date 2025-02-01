@@ -5,6 +5,7 @@ import { FC, useRef, useState, useEffect } from "react";
 import { Stage, Layer, Line, Rect, Ellipse } from "react-konva";
 import { Vector2d } from "konva/lib/types";
 import { Rectangle } from "./rectangle";
+import { TransformableEllipse } from "./ellipse";
 
 type PropTypes = {
   tool: ToolType;
@@ -19,10 +20,6 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const lines = useLinesStore((state) => state.lines);
   const setLines = useLinesStore((state) => state.setLines);
   const rectangles = useLinesStore((state) => state.rectangles);
-  console.log(
-    "\n\n ---> src/components/logic/canvas.tsx:21 -> rectangles: ",
-    rectangles
-  );
   const setRectangles = useLinesStore((state) => state.setRectangles);
   const ellipses = useLinesStore((state) => state.ellipses);
   const setEllipse = useLinesStore((state) => state.setEllipse);
@@ -105,6 +102,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     } else if (tool === "ellipse") {
       startPoint.current = pos;
       setTemporaryEllipse({
+        id: `${shapeId++}`,
         tool: "ellipse",
         x: pos.x,
         y: pos.y,
@@ -155,6 +153,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       const centerY = y + (point.y - y) / 2;
 
       setTemporaryEllipse({
+        id: `${shapeId}`,
         tool: "ellipse",
         x: centerX,
         y: centerY,
@@ -258,7 +257,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
               onSelect={() => {
                 setSelectedShapeId(rect.id);
               }}
-              onChange={(newAttrs) => {
+              onChange={(newAttrs: RectType) => {
                 const rects = rectangles.slice();
                 rects[i] = newAttrs;
                 setRectangles(rects);
@@ -277,14 +276,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
             />
           )}
           {ellipses.map((ellipse, i) => (
-            <Ellipse
+            <TransformableEllipse
               key={i}
-              x={ellipse.x}
-              y={ellipse.y}
-              radiusX={ellipse.radiusX}
-              radiusY={ellipse.radiusY}
-              stroke={ellipse.strokeColor}
-              strokeWidth={ellipse.strokeWidth}
+              shapeProps={ellipse}
+              isSelected={ellipse.id === selectedShapeId}
+              onSelect={() => {
+                setSelectedShapeId(ellipse.id);
+              }}
+              onChange={(newAttrs: EllipseType) => {
+                const elps = ellipses.slice();
+                elps[i] = newAttrs;
+                setEllipse(elps);
+              }}
             />
           ))}
           {temporaryEllipse && (

@@ -17,6 +17,7 @@ type RectType = {
 };
 
 type EllipseType = {
+  id: string;
   tool: "ellipse";
   x: number;
   y: number;
