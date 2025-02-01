@@ -6,6 +6,7 @@ type LineType = {
 };
 
 type RectType = {
+  id: string;
   tool: "rectangle";
   x: number;
   y: number;
@@ -16,6 +17,7 @@ type RectType = {
 };
 
 type EllipseType = {
+  id: string;
   tool: "ellipse";
   x: number;
   y: number;

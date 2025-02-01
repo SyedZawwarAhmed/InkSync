@@ -4,12 +4,16 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { FC, useRef, useState, useEffect } from "react";
 import { Stage, Layer, Line, Rect, Ellipse } from "react-konva";
 import { Vector2d } from "konva/lib/types";
+import { Rectangle } from "./rectangle";
+import { TransformableEllipse } from "./ellipse";
 
 type PropTypes = {
   tool: ToolType;
   strokeColor: string;
   strokeWidth: number;
 };
+
+let shapeId = 0;
 
 export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
   const { draw } = useSocket();
@@ -22,6 +26,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
 
   const isDrawing = useRef(false);
   const startPoint = useRef<{ x: number; y: number } | null>(null);
+  const [selectedShapeId, setSelectedShapeId] = useState("");
   const [temporaryRectangle, setTemporaryRectangle] = useState<RectType | null>(
     null
   );
@@ -68,6 +73,9 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
     e.evt.preventDefault();
+
+    // Only start drawing if the click target is the stage background.
+    if (e.target !== e.target.getStage()) return;
     if (isSpacePressed) return; // Don't draw if space is pressed
 
     isDrawing.current = true;
@@ -82,6 +90,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     } else if (tool === "rectangle") {
       startPoint.current = pos;
       setTemporaryRectangle({
+        id: `${shapeId++}`,
         tool: "rectangle",
         x: pos.x,
         y: pos.y,
@@ -93,6 +102,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
     } else if (tool === "ellipse") {
       startPoint.current = pos;
       setTemporaryEllipse({
+        id: `${shapeId++}`,
         tool: "ellipse",
         x: pos.x,
         y: pos.y,
@@ -124,6 +134,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       const height = point.y - y;
 
       setTemporaryRectangle({
+        id: `${shapeId}`,
         tool: "rectangle",
         x,
         y,
@@ -142,6 +153,7 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
       const centerY = y + (point.y - y) / 2;
 
       setTemporaryEllipse({
+        id: `${shapeId}`,
         tool: "ellipse",
         x: centerX,
         y: centerY,
@@ -213,14 +225,6 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         x={stage.x}
         y={stage.y}
         draggable={isSpacePressed || tool === "hand"}
-        onDragEnd={(e) => {
-          const newPos = e.target.position();
-          setStage({
-            ...stage,
-            x: newPos.x,
-            y: newPos.y,
-          });
-        }}
         style={{
           cursor:
             isSpacePressed || tool === "hand"
@@ -246,14 +250,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
             />
           ))}
           {rectangles.map((rect, i) => (
-            <Rect
+            <Rectangle
               key={i}
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              stroke={rect.strokeColor}
-              strokeWidth={rect.strokeWidth}
+              shapeProps={rect}
+              isSelected={rect.id === selectedShapeId}
+              onSelect={() => {
+                setSelectedShapeId(rect.id);
+              }}
+              onChange={(newAttrs: RectType) => {
+                const rects = rectangles.slice();
+                rects[i] = newAttrs;
+                setRectangles(rects);
+              }}
             />
           ))}
           {temporaryRectangle && (
@@ -268,14 +276,18 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
             />
           )}
           {ellipses.map((ellipse, i) => (
-            <Ellipse
+            <TransformableEllipse
               key={i}
-              x={ellipse.x}
-              y={ellipse.y}
-              radiusX={ellipse.radiusX}
-              radiusY={ellipse.radiusY}
-              stroke={ellipse.strokeColor}
-              strokeWidth={ellipse.strokeWidth}
+              shapeProps={ellipse}
+              isSelected={ellipse.id === selectedShapeId}
+              onSelect={() => {
+                setSelectedShapeId(ellipse.id);
+              }}
+              onChange={(newAttrs: EllipseType) => {
+                const elps = ellipses.slice();
+                elps[i] = newAttrs;
+                setEllipse(elps);
+              }}
             />
           ))}
           {temporaryEllipse && (
