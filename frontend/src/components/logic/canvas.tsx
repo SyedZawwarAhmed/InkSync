@@ -76,6 +76,9 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>): void => {
     e.evt.preventDefault();
+
+    // Only start drawing if the click target is the stage background.
+    if (e.target !== e.target.getStage()) return;
     if (isSpacePressed) return; // Don't draw if space is pressed
 
     isDrawing.current = true;
@@ -223,14 +226,6 @@ export const Canvas: FC<PropTypes> = ({ tool, strokeWidth, strokeColor }) => {
         x={stage.x}
         y={stage.y}
         draggable={isSpacePressed || tool === "hand"}
-        onDragEnd={(e) => {
-          const newPos = e.target.position();
-          setStage({
-            ...stage,
-            x: newPos.x,
-            y: newPos.y,
-          });
-        }}
         style={{
           cursor:
             isSpacePressed || tool === "hand"
